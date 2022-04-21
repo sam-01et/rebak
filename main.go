@@ -4,19 +4,21 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/go-git/go-git/v5"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"rebak/helpers"
 	"strings"
+
+	"github.com/go-git/go-git/v5"
 )
 
 type GitJsonResponse struct {
-	Id int `json:"id"`
-	Name string `json:"name"`
-	Private bool `json:"private"`
+	Id      int    `json:"id"`
+	Name    string `json:"name"`
+	Private bool   `json:"private"`
 }
 
 //default permission for a newly created file
@@ -71,16 +73,16 @@ func main() {
 		baseGitUrl := strings.Join([]string{"https://github.com/", *gitAccountUsername, "/", repo, ".git"}, "")
 		fmt.Printf("Cloning %s \n", repo)
 		_, _ = git.PlainClone(newDir, false, &git.CloneOptions{
-			URL: baseGitUrl,
+			URL:               baseGitUrl,
 			RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
-			Progress: log.Writer(),
+			Progress:          log.Writer(),
 		})
 	}
 
 	fmt.Println("Cloning completed")
 }
 
-func createDirIfNotExists(dir string)  {
+func createDirIfNotExists(dir string) {
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
 		err = os.Mkdir(dir, newFileDefaultPermission)
@@ -96,7 +98,7 @@ func createDir(dir string, repo string, createRepositoryDir bool) string {
 
 	if len(dir) > 0 {
 		if createRepositoryDir && len(repo) > 0 {
-			newDir = strings.Join([]string{dir, fileSeparator , repo}, "")
+			newDir = strings.Join([]string{dir, fileSeparator, repo}, "")
 		} else if !createRepositoryDir && len(repo) == 0 {
 			newDir = strings.Join([]string{dir, fileSeparator, defaultRebakDirectory}, "")
 		}
@@ -120,14 +122,9 @@ func argsAreValid(gitAccountUsername string) bool {
 	return true
 }
 
-func createUrl(accountUsername string) string{
-	s := []string{"https://api.github.com/users/", accountUsername, "/repos"}
-	return strings.Join(s, "")
-}
-
 //Fetches repositories for the given github account
-func fetchRepositories (accountUsername string) []string{
-	url := createUrl(accountUsername)
+func fetchRepositories(accountUsername string) []string {
+	url := helpers.CreateUrl(accountUsername)
 	response, err := http.Get(url)
 	if err != nil {
 		os.Exit(1)
