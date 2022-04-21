@@ -8,11 +8,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"rebak/helpers"
-	"strings"
-
-	"github.com/go-git/go-git/v5"
+	"rebak/hub"
 )
 
 type GitJsonResponse struct {
@@ -23,7 +20,6 @@ type GitJsonResponse struct {
 
 //default permission for a newly created file
 const newFileDefaultPermission = 0775
-const defaultRebakDirectory = "rebak_dir"
 
 func main() {
 	cwd, err := os.Getwd()
@@ -52,7 +48,7 @@ func main() {
 
 	if *cloneDir == cwd {
 		//to prevent overcrowding current dir, create a new dir inside the current dir- by default name it rebak_dir
-		dir = createDir(dir, "", false)
+		dir = helpers.CreateDir(dir, "", false)
 		log.Printf("No directory specified, using dafault location %s \n", dir)
 	}
 
@@ -68,16 +64,7 @@ func main() {
 	fmt.Printf("Found repos: %s \n", repos)
 	fmt.Println("**********************************************")
 
-	for _, repo := range repos {
-		newDir := createDir(dir, repo, true)
-		baseGitUrl := strings.Join([]string{"https://github.com/", *gitAccountUsername, "/", repo, ".git"}, "")
-		fmt.Printf("Cloning %s \n", repo)
-		_, _ = git.PlainClone(newDir, false, &git.CloneOptions{
-			URL:               baseGitUrl,
-			RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
-			Progress:          log.Writer(),
-		})
-	}
+	hub.StartCloning(repos, dir, *gitAccountUsername)
 
 	fmt.Println("Cloning completed")
 }
@@ -92,26 +79,6 @@ func createDirIfNotExists(dir string) {
 	}
 }
 
-func createDir(dir string, repo string, createRepositoryDir bool) string {
-	var newDir string
-	var fileSeparator = string(filepath.Separator)
-
-	if len(dir) > 0 {
-		if createRepositoryDir && len(repo) > 0 {
-			newDir = strings.Join([]string{dir, fileSeparator, repo}, "")
-		} else if !createRepositoryDir && len(repo) == 0 {
-			newDir = strings.Join([]string{dir, fileSeparator, defaultRebakDirectory}, "")
-		}
-	} else {
-		log.Fatalln("")
-	}
-
-	err := os.Mkdir(newDir, newFileDefaultPermission)
-	if err != nil {
-		log.Print(err)
-	}
-	return newDir
-}
 
 //Validates the commandline arguments
 func argsAreValid(gitAccountUsername string) bool {
