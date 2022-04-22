@@ -18,9 +18,6 @@ type GitJsonResponse struct {
 	Private bool   `json:"private"`
 }
 
-//default permission for a newly created file
-const newFileDefaultPermission = 0775
-
 func main() {
 	cwd, err := os.Getwd()
 
@@ -72,13 +69,12 @@ func main() {
 func createDirIfNotExists(dir string) {
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
-		err = os.Mkdir(dir, newFileDefaultPermission)
+		err = os.Mkdir(dir, helpers.NewFileDefaultPermission)
 		if err != nil {
 			log.Fatal("Failed to create a directory that does not exist.")
 		}
 	}
 }
-
 
 //Validates the commandline arguments
 func argsAreValid(gitAccountUsername string) bool {
