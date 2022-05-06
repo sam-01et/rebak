@@ -1,22 +1,13 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"rebak/helpers"
 	"rebak/hub"
 )
-
-type GitJsonResponse struct {
-	Id      int    `json:"id"`
-	Name    string `json:"name"`
-	Private bool   `json:"private"`
-}
 
 func main() {
 	cwd, err := os.Getwd()
@@ -51,7 +42,7 @@ func main() {
 
 	fmt.Println("Fetching repositories")
 
-	repos := fetchRepositories(*gitAccountUsername)
+	repos := hub.FetchRepositories(*gitAccountUsername)
 
 	if len(repos) == 0 {
 		log.Println("No repositories were found.")
@@ -83,27 +74,4 @@ func argsAreValid(gitAccountUsername string) bool {
 		return false
 	}
 	return true
-}
-
-//Fetches repositories for the given github account
-func fetchRepositories(accountUsername string) []string {
-	url := helpers.CreateUrl(accountUsername)
-	response, err := http.Get(url)
-	if err != nil {
-		os.Exit(1)
-	}
-
-	responseData, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var gitResponses []GitJsonResponse
-	json.Unmarshal(responseData, &gitResponses)
-
-	var repos []string
-	for _, value := range gitResponses {
-		repos = append(repos, value.Name)
-	}
-	return repos
 }
